@@ -45,7 +45,6 @@ def naked_twins(values):
             continue
         for unit in box_to_unit_peers[box]:  # three unit types: row, column, box
             for peer in unit:
-                # if [choice for choice in choices if choice not in values[peer]]:
                 if values[peer] != choices:
                     continue
                 for non_twin_peer in unit:
@@ -188,11 +187,11 @@ if __name__ == '__main__':
     diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
     display(solve(diag_sudoku_grid))
 
-    # try:
-    #     from visualize import visualize_assignments
-    #     visualize_assignments(assignments)
-    #
-    # except SystemExit:
-    #     pass
-    # except:
-    #     print('We could not visualize your board due to a pygame issue. Not a problem! It is not a requirement.')
+    try:
+        from visualize import visualize_assignments
+        visualize_assignments(assignments)
+
+    except SystemExit:
+        pass
+    except:
+        print('We could not visualize your board due to a pygame issue. Not a problem! It is not a requirement.')

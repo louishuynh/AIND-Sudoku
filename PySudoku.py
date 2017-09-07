@@ -10,6 +10,7 @@ rows = 'ABCDEFGHI'
 def play(values_list):
     pygame.init()
 
+
     size = width, height = 700, 700
     screen = pygame.display.set_mode(size)
 

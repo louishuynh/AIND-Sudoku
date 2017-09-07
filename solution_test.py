@@ -76,6 +76,7 @@ class TestNakedTwins(unittest.TestCase):
                         "Your naked_twins function produced an unexpected board.")
 
 
+
 class TestDiagonalSudoku(unittest.TestCase):
     diagonal_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
     solved_diag_sudoku = {'G7': '8', 'G6': '9', 'G5': '7', 'G4': '3', 'G3': '2', 'G2': '4', 'G1': '6', 'G9': '5',
@@ -92,17 +93,6 @@ class TestDiagonalSudoku(unittest.TestCase):
 
     def test_solve(self):
         self.assertEqual(solution.solve(self.diagonal_grid), self.solved_diag_sudoku)
-
-
-class TestBasicSudoku(unittest.TestCase):
-    basic_grid = '..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.3..'
-    basic_values = solution.grid_values(basic_grid)
-
-    def test_basic_values_iterable(self):
-        self.assertTrue([box for box in self.basic_values] == [box for box in self.basic_values.keys()])
-
-
-
 
 if __name__ == '__main__':
     unittest.main()
