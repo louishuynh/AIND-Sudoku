@@ -39,6 +39,30 @@ def naked_twins(values):
 
     # Find all instances of naked twins
     # Eliminate the naked twins as possibilities for their peers
+    for box in unsolved_boxes(values):
+        choices = values[box]
+        if len(choices) > 2:
+            continue
+        for unit in box_to_unit_peers[box]:  # three unit types: row, column, box
+            for peer in unit:
+                # if [choice for choice in choices if choice not in values[peer]]:
+                if values[peer] != choices:
+                    continue
+                for non_twin_peer in unit:
+                    if non_twin_peer == peer:
+                        continue
+                    for ntp_choice in values[non_twin_peer]:
+                        if ntp_choice in choices:
+                            logger.debug('Found naked twin in box: {}'.format(unit))
+                            logger.debug('Box: {}({}), Peer: {}({})'.format(box, choices, peer, values[peer]))
+                            logger.debug('Non Twin Peer: {}({})'.format(non_twin_peer, values[non_twin_peer]))
+                            msg = 'Removing {} from Non Twin Peers from {} to {}'
+                            old_v = values[non_twin_peer]
+                            new_v = values[non_twin_peer].replace(ntp_choice, '')
+                            logger.debug(msg.format(non_twin_peer, old_v, new_v))
+                            values = assign_value(values, non_twin_peer, new_v)
+
+
     return values
 
 
@@ -97,6 +121,12 @@ def reduce_puzzle(values):
 
         logger.info('========== Run only choice algo. ==========')
         values = only_choice(values)
+        if solved(values):
+            logger.info('Sudoku complete.')
+            break
+
+        logger.info('========== Run naked twins algo. ==========')
+        values = naked_twins(values)
         solved_boxes_after = solved_boxes(values)
         if solved(values):
             logger.info('Sudoku complete.')
@@ -146,7 +176,6 @@ def solve(grid):
 
     values = grid_values(grid)
     values = reduce_puzzle(values)
-    values = naked_twins(values)
     if values is False:
         return False
     if not solved(values):

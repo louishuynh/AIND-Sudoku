@@ -59,7 +59,7 @@ diagonal_units = [
 
 
 
-units = row_units + column_units + square_units # + diagonal_units
+units = row_units + column_units + square_units + diagonal_units
 # List of unit constraints. In a typical Sudoku there should be 27.
 # Each coordinate should appear in three units: row, column and square.
 
