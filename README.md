@@ -4,12 +4,14 @@
 # Question 1 (Naked Twins)
 Q: How do we use constraint propagation to solve the naked twins problem?  
 A: We iterate through all our unsolved units (rows, columns and squares) to identify any two boxes that both contain
-the same only two choices (Or we could iterate and find boxes with only two choices to see if any of it's peers have
-at least these two choices) - TBC. Solutions_Test.py all pass.
+the same only two choices. If we find a pair, they are known as naked twins. Even though we do know which box
+contains which value, we know together they must take both values, therefore we can eliminate their values from
+any other boxes in the same units, due to the constraints that we've been given.
 
 # Question 2 (Diagonal Sudoku)
 Q: How do we use constraint propagation to solve the diagonal sudoku problem?  
-A: *Student should provide answer here*
+A: A diagonal sudoku is simply adding two additional units, one for each diagonal as additional constraints such
+ that we have a total of 29 constraints (9 rows, 9 columns, 9 boxes and two diagonals).
 
 ### Install
 
