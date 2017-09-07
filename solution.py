@@ -19,7 +19,7 @@ value (str) are the potential values that can be assigned to a box. When it's le
 import logging
 
 logger = logging.getLogger()
-logger.setLevel('DEBUG')
+logger.setLevel('INFO')
 logging.info('Load up utilities')
 
 
@@ -153,11 +153,6 @@ def solve_status(values):
     return '{}% solved ({}/81).'.format(pct_solved, n_solved)
 
 
-logger = logging.getLogger(__name__)
-logger.setLevel('INFO')
-logging.info('Start Solving Sudoku')
-
-
 assignments = []
 
 
@@ -254,24 +249,21 @@ def reduce_puzzle(values):
     """
     stalled = False
     solved_boxes_before = solved_boxes(values)
-    logger.info('Starting Sudoku: {}'.format(solve_status(values)))
-    for box in solved_boxes(values):
-        logger.info('{}: {}'.format(box, values[box]))
     while not stalled:
 
-        logger.info('========== Run eliminate algo. ==========')
+        logger.debug('========== Run eliminate algo. ==========')
         values = eliminate(values)
         if solved(values):
             logger.info('Sudoku complete.')
             break
 
-        logger.info('========== Run only choice algo. ==========')
+        logger.debug('========== Run only choice algo. ==========')
         values = only_choice(values)
         if solved(values):
             logger.info('Sudoku complete.')
             break
 
-        logger.info('========== Run naked twins algo. ==========')
+        logger.debug('========== Run naked twins algo. ==========')
         values = naked_twins(values)
         solved_boxes_after = solved_boxes(values)
         if solved(values):
@@ -281,7 +273,7 @@ def reduce_puzzle(values):
         else:
             stalled = solved_boxes_before == solved_boxes_after
             if stalled:
-                logger.info('Sudoku reducer stalled.')
+                logger.debug('Sudoku reducer stalled.')
             else:
                 solved_boxes_before = solved_boxes_after
         if invalid_boxes(values):
@@ -290,22 +282,24 @@ def reduce_puzzle(values):
     return values
 
 
-def search(values, mystr=''):
+def search(values, mystr='.'):
     """ Using depth-first search and propagation, create a search tree and solve the sudoku."""
 
     unfilled = [(box, values[box], len(values[box])) for box in values if len(values[box]) > 1]
-    if unfilled == []:
+    if not unfilled:
         return values
 
     unfilled = sorted(unfilled, key=lambda x: x[2])
     node, choices, _ = unfilled[0]
     for choice in choices:
-        logger.debug('tried: {}, choices are {}'.format(mystr, unfilled[:3]))
         t = values.copy()
         t[node] = choice
-        recursive_search = search(t, mystr='{}/{}={}'.format(mystr, node, choice))
+        logger.debug('Trying: {}={} assuming {} from options {}.'.format(node, choice, mystr, unfilled[:4]))
+        t = reduce_puzzle(t)
+        if t is False:
+            return False
+        recursive_search = search(t, mystr='{},{}={}'.format(mystr, node, choice))
         if recursive_search is not False:
-            logger.debug('Found {} OK!'.format(mystr))
             return recursive_search
     return False
 
@@ -321,12 +315,18 @@ def solve(grid):
     """
 
     values = grid_values(grid)
+    logger.info('Starting Sudoku: {}'.format(solve_status(values)))
+    for box in solved_boxes(values):
+        logger.info('{}: {}'.format(box, values[box]))
     values = reduce_puzzle(values)
     if values is False:
         return False
     if not solved(values):
         logger.info('Apply search algorithm.')
         values = search(values)
+        logger.info('Values={}'.format(values_grid(values)))
+        for box in values:
+            values = assign_value(values, box, values[box])
     return values
 
 

@@ -52,6 +52,14 @@ class TestDiagonalSolution(unittest.TestCase):
         solution = values_grid(solve(diag_sudoku_grid))
         self.assertEquals(solution, expected_solution)
 
+    def test_solve_diagonal_2(self):
+        diag_sudoku_grid_2 = '9.1....8.8.5.7..4.2.4....6...7......5..............83.3..6......9................'
+        expected_solution_2 = '961435782835276941274819563147583629583962174629147835318694257492758316756321498'
+        solution_2 = values_grid(solve(diag_sudoku_grid_2))
+        print('Expected: {}'.format(expected_solution_2))
+        print('Solution: {}'.format(solution_2))
+        self.assertEquals(expected_solution_2, solution_2)
+
 
 class TestNakedTwinsSolution(unittest.TestCase):
     def test_solve_naked_twins(self):
