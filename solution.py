@@ -19,7 +19,7 @@ value (str) are the potential values that can be assigned to a box. When it's le
 import logging
 
 logger = logging.getLogger()
-logger.setLevel('DEBUG')
+logger.setLevel('INFO')
 logging.info('Load up utilities')
 
 
@@ -151,6 +151,16 @@ def solve_status(values):
     n_solved = solved_count(values)
     pct_solved = '{:.0f}'.format(100 * n_solved / 81)
     return '{}% solved ({}/81).'.format(pct_solved, n_solved)
+
+
+def is_valid(values):
+    evalues = {'1', '2', '3', '4', '5', '6', '7', '8', '9'}
+    for i, unit in enumerate(units):
+        unit_check = sorted([values[box] for box in unit])
+        print('{}: {}'.format(i, unit_check))
+        if unit_check == evalues is False:
+            return False
+    return True
 
 
 assignments = []
