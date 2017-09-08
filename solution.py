@@ -297,7 +297,7 @@ def search(values, mystr='.'):
         logger.debug('Trying: {}={} assuming {} from options {}.'.format(node, choice, mystr, unfilled[:4]))
         t = reduce_puzzle(t)
         if t is False:
-            return False
+            continue
         recursive_search = search(t, mystr='{},{}={}'.format(mystr, node, choice))
         if recursive_search is not False:
             return recursive_search

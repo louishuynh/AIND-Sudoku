@@ -62,7 +62,7 @@ class TestDiagonalSolution(unittest.TestCase):
 
     def test_solve_diagonal_3(self):
         diag_sudoku_grid_3 = '...8...1.781..........1....4.......5..8..7.....75.319................6.........3.'
-        expected_solution_3 = '.'
+        expected_solution_3 = '924876513781352946536419782493168275158927364267543198379685421812734659645291837'
         solution_3 = values_grid(solve(diag_sudoku_grid_3))
         print('Expected: {}'.format(expected_solution_3))
         print('Solution: {}'.format(solution_3))
