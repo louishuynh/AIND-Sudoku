@@ -19,7 +19,7 @@ value (str) are the potential values that can be assigned to a box. When it's le
 import logging
 
 logger = logging.getLogger()
-logger.setLevel('INFO')
+logger.setLevel('DEBUG')
 logging.info('Load up utilities')
 
 
@@ -97,7 +97,7 @@ def grid_values(grid):
 
 
 def values_grid(values):
-    return ''.join([values[box] if len(values[box]) == 1 else '.' for box in boxes])
+    return False if values is False else ''.join([values[box] if len(values[box]) == 1 else '.' for box in boxes])
 
 
 def display(values):
@@ -189,19 +189,19 @@ def naked_twins(values):
             for peer in unit:
                 if values[peer] != choices:
                     continue
+                msg1 = 'Found naked twin in boxes: {}({}) and {}({}) from unit: [{}]'
+                msg2 = msg1.format(box, choices, peer, values[peer], ','.join(unit))
                 for non_twin_peer in unit:
                     if non_twin_peer == peer:
                         continue
+                    # logger.debug('Found Non Twin Peer: {}({})'.format(non_twin_peer, values[non_twin_peer]))
                     for ntp_choice in values[non_twin_peer]:
+                        msg3 = '{} and Removing {} from Non Twin Peer from {} to {}.'
+                        old_v = values[non_twin_peer]
                         if ntp_choice in choices:
-                            logger.debug('Found naked twin in box: {}'.format(unit))
-                            logger.debug('Box: {}({}), Peer: {}({})'.format(box, choices, peer, values[peer]))
-                            logger.debug('Non Twin Peer: {}({})'.format(non_twin_peer, values[non_twin_peer]))
-                            msg = 'Removing {} from Non Twin Peers from {} to {}'
-                            old_v = values[non_twin_peer]
                             new_v = values[non_twin_peer].replace(ntp_choice, '')
-                            logger.debug(msg.format(non_twin_peer, old_v, new_v))
                             values = assign_value(values, non_twin_peer, new_v)
+                            logger.debug(msg3.format(msg2, ntp_choice, non_twin_peer, old_v, new_v))
 
 
     return values
@@ -225,7 +225,7 @@ def only_choice(values):
     for box in unsolved_boxes(values):
         choices = values[box]
         found = False
-        logger.debug('{}: {}'.format(box, choices))
+        # logger.debug('{}: {}'.format(box, choices))
         for unit in box_to_unit_peers[box]:  # three unit types: row, column, box
             other_choices = ''.join([values[peer] for peer in unit])
             for choice in choices:
@@ -324,6 +324,8 @@ def solve(grid):
     if not solved(values):
         logger.info('Apply search algorithm.')
         values = search(values)
+        if values is False:
+            return values
         logger.info('Values={}'.format(values_grid(values)))
         for box in values:
             values = assign_value(values, box, values[box])
