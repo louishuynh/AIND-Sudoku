@@ -1,6 +1,6 @@
 import unittest
 
-from solution import solve, values_grid, grid_values, naked_twins, is_valid
+from solution import solve, values_grid, grid_values, naked_twins, is_valid, display
 
 
 class TestUtils(unittest.TestCase):
@@ -70,16 +70,17 @@ class TestDiagonalSolution(unittest.TestCase):
 
     def test_solve_diagonal_4(self):
         diag_sudoku_grid_4 = '..7..5..2.......13.........9...8.7......7...5..2.......1..3.......54.......7....4'
-        expected_solution_4 = '397815642284697513681423957935284761846179325172356489418932576763541298529768134'
-        solution_4 = values_grid(solve(diag_sudoku_grid_4))
-        print('Expected: {}'.format(expected_solution_4))
-        print('Solution: {}'.format(solution_4))
-        self.assertEquals(expected_solution_4, solution_4)
-        print(is_valid(grid_values(solution_4)))
-
-
-
-
+        expected_solution_4 = '367415892295867413841329657953284761684173925172956348418632579739541286526798134'
+        resp = solve(diag_sudoku_grid_4)
+        if resp is not False:
+            solution_4 = values_grid(resp)
+            print('Expected: {}'.format(expected_solution_4))
+            print('Solution: {}'.format(solution_4))
+            print(display(grid_values(solution_4)))
+            self.assertEquals(expected_solution_4, solution_4)
+            self.assertTrue(is_valid(grid_values(solution_4)))
+        else:
+            print('Could not find a valid solution.')
 
 
 class TestNakedTwinsSolution(unittest.TestCase):

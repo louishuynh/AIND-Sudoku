@@ -19,9 +19,10 @@ value (str) are the potential values that can be assigned to a box. When it's le
 import logging
 
 logger = logging.getLogger()
-logger.setLevel('INFO')
-logging.info('Load up utilities')
-
+logger.setLevel('DEBUG')
+stream_handler = logging.StreamHandler()  # Handler for the logger
+logger.addHandler(stream_handler)
+stream_handler.setFormatter(logging.Formatter('[%(levelname)s] %(funcName)s: %(message)s'))
 
 rows = 'ABCDEFGHI'
 cols = '123456789'
@@ -135,7 +136,11 @@ def invalid_boxes(values):
     list_invalid_boxes = boxes_with_value_len(values, value_len=0)
     if list_invalid_boxes:
         logger.warning('Invalid boxes found: {}'.format(list_invalid_boxes))
-    return list_invalid_boxes
+        return True
+    complete = solved_count(values) == 81
+    if complete is True and is_valid(values) is False:
+        return False
+    return False
 
 
 def solved_count(values):
@@ -143,8 +148,19 @@ def solved_count(values):
     return len(list_solved)
 
 
-def solved(values):
-    return solved_count(values) == 81
+def check_complete(values):
+    """ Returns tuple of solved status and values if False."""
+    if invalid_boxes(values):
+        return False, False
+    complete = solved_count(values) == 81
+    if complete:
+        if is_valid(values) is False:
+            values = False
+        if values is False:
+            logger.info('Sudoku complete but not valid solution!')
+        elif values is not False:
+            logger.info('Sudoku complete and valid.')
+    return complete, values
 
 
 def solve_status(values):
@@ -154,11 +170,12 @@ def solve_status(values):
 
 
 def is_valid(values):
-    evalues = {'1', '2', '3', '4', '5', '6', '7', '8', '9'}
+    evalues = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
     for i, unit in enumerate(units):
         unit_check = sorted([values[box] for box in unit])
-        print('{}: {}'.format(i, unit_check))
-        if unit_check == evalues is False:
+        # print('{}: {}'.format(i, unit_check))
+        if (unit_check == evalues) is False:
+            # print('Not valid unit {}. {}'.format(i, unit_check))
             return False
     return True
 
@@ -263,21 +280,21 @@ def reduce_puzzle(values):
 
         logger.debug('========== Run eliminate algo. ==========')
         values = eliminate(values)
-        if solved(values):
-            logger.info('Sudoku complete.')
+        complete, values = check_complete(values)
+        if complete or values is False:
             break
 
         logger.debug('========== Run only choice algo. ==========')
         values = only_choice(values)
-        if solved(values):
-            logger.info('Sudoku complete.')
+        complete, values = check_complete(values)
+        if complete or values is False:
             break
 
         logger.debug('========== Run naked twins algo. ==========')
         values = naked_twins(values)
         solved_boxes_after = solved_boxes(values)
-        if solved(values):
-            logger.info('Sudoku complete.')
+        complete, values = check_complete(values)
+        if complete or values is False:
             break
 
         else:
@@ -295,11 +312,13 @@ def reduce_puzzle(values):
 def search(values, mystr='.'):
     """ Using depth-first search and propagation, create a search tree and solve the sudoku."""
 
-    unfilled = [(box, values[box], len(values[box])) for box in values if len(values[box]) > 1]
-    if not unfilled:
+    complete_status, values = check_complete(values)
+    if complete_status:
         return values
 
+    unfilled = [(box, values[box], len(values[box])) for box in values if len(values[box]) > 1]
     unfilled = sorted(unfilled, key=lambda x: x[2])
+
     node, choices, _ = unfilled[0]
     for choice in choices:
         t = values.copy()
@@ -325,16 +344,20 @@ def solve(grid):
     """
 
     values = grid_values(grid)
-    logger.info('Starting Sudoku: {}'.format(solve_status(values)))
-    for box in solved_boxes(values):
-        logger.info('{}: {}'.format(box, values[box]))
+    starting_sudoku = ','.join(['{}={}'.format(box, values[box]) for box in solved_boxes(values)])
+    logger.info('Starting Sudoku: {} {}'.format(solve_status(values), starting_sudoku))
     values = reduce_puzzle(values)
     if values is False:
+        logger.info('Sudoku has no valid solutions. Returning False.')
         return False
-    if not solved(values):
-        logger.info('Apply search algorithm.')
+    logger.info('Checking if Sudoku is complete and solved.')
+    complete, values = check_complete(values)
+    logger.info('Sudoku complete status: {}. Values are: {}.'.format(complete, values))
+    if complete is False or values is False:
+        logger.info('===== ATTEMPTING TO SOLVE USING SEARCH ALGORITHM =====.')
         values = search(values)
         if values is False:
+            logger.info('Unable to find valid solution. Returning False.')
             return values
         logger.info('Values={}'.format(values_grid(values)))
         for box in values:
