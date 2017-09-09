@@ -24,64 +24,66 @@ stream_handler = logging.StreamHandler()  # Handler for the logger
 logger.addHandler(stream_handler)
 stream_handler.setFormatter(logging.Formatter('[%(levelname)s] %(funcName)s: %(message)s'))
 
-rows = 'ABCDEFGHI'
-cols = '123456789'
+
+class SudokuBoard():
+    """
+    A representation of (9 x 9) Soduku board and collection of board attributes.
+    Attributes:
+        rows = str. 'ABCDEFGHI'
+        cols = str. '123456789'
+        boxes = list[str]. List of all co-ordinates on board
+            e.g. ['A1', ..., 'A9', 'B1', ..., 'I9']
+        row_units = list[str]. List of all row units.
+            e.g. row_units[0] = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9']
+        column_units = list[str]. List of all column units.
+            e.g. column_units[0] = ['A1', 'B1', 'C1', 'D1', 'E1', 'F1', 'G1', 'H1', 'I1']
+        square_units = list[str]. List of all square units.
+            e.g. square_units[0] = ['A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3']
+        diagonal_units = list[str]. List of all diagonal units.
+            e.g. diagonal_units[0] = ['A1', 'B2', 'C3', 'D4', 'E5', 'F6', 'G7', 'H8', 'I9']
+        units = list[str]. List of unit constraints. In a typical Sudoku there are 27 constraints
+            Each coordinate should appear in three units: row, column and square.
+        unit_peers_map = dict(str, list(str)). Dictionary of unit peers for each box.
+            e.g. A1 element example:
+            [['A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9'],
+            ['B1', 'C1', 'D1', 'E1', 'F1', 'G1', 'H1', 'I1'],
+            ['A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3']]
+        all_peers_map = dict(str, set(str)). Dictionary of all peers for each box.
+            e.g. A1 element example:
+            {'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9',
+            'B1', 'C1', 'D1', 'E1', 'F1', 'G1', 'H1', 'I1'
+            'B2', 'B3', 'C2', 'C3'}
+    """
+
+    def __init__(self):
+        self.rows = 'ABCDEFGHI'
+        self.cols = '123456789'
+        self.boxes = self.cross(self.rows, self.cols)
+        self.row_units = [self.cross(r, self.cols) for r in self.rows]
+        self.column_units = [self.cross(self.rows, c) for c in self.cols]
+        self.square_units = [self.cross(rs, cs) for rs in ('ABC', 'DEF', 'GHI') for cs in ('123', '456', '789')]
+        self._diag_1 = [row + col for row, col in zip('ABCDEFGHI', '123456789')]
+        self._diag_2 = [row + col for row, col in zip('ABCDEFGHI', '987654321')]
+        self.diagonal_units = [self._diag_1, self._diag_2]
+        self.units = self.row_units + self.column_units + self.square_units + self.diagonal_units
+        self.unit_peers_map = dict((b, [[p for p in u if b != p] for u in self.units if b in u]) for b in self.boxes)
+        self.all_peers_map = dict((b, set(sum(self.unit_peers_map[b], []))) for b in self.boxes)
+
+    @staticmethod
+    def cross(rows: str, cols: str) -> list:
+        """ Cross product of elements in A and elements in B. """
+        return [row + col for row in rows for col in cols]
+
+    def unit_peers(self, box: str) -> list:
+        """ Returns a list of unit peers for a given box. """
+        return self.unit_peers_map[box]
+
+    def all_peers(self, box: str) -> set:
+        """ Returns a list of all peers for a given box. """
+        return self.all_peers_map[box]
 
 
-def cross(rows: str, cols: str) -> list:
-    """ Cross product of elements in A and elements in B. """
-    return [row + col for row in rows for col in cols]
-
-
-boxes = cross(rows, cols)
-# List of all coordinates.
-# ['A1', 'A2', ..., 'A9', 'B1', ..., 'B9', ..., 'I1', ..., 'I9']
-
-
-row_units = [cross(r, cols) for r in rows]
-# Element example:
-# row_units[0] = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9']
-# This is the top most row.
-
-
-column_units = [cross(rows, c) for c in cols]
-# Element example:
-# column_units[0] = ['A1', 'B1', 'C1', 'D1', 'E1', 'F1', 'G1', 'H1', 'I1']
-# This is the left most column.
-
-
-square_units = [cross(rs, cs) for rs in ('ABC', 'DEF', 'GHI') for cs in ('123', '456', '789')]
-# Element example:
-# square_units[0] = ['A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3']
-# This is the top left square.
-
-
-diagonal_units = [
-    [row + col for row, col in zip('ABCDEFGHI', '123456789')],
-    [row + col for row, col in zip('ABCDEFGHI', '987654321')]
-    ]
-
-
-units = row_units + column_units + square_units + diagonal_units
-# List of unit constraints. In a typical Sudoku there should be 27.
-# Each coordinate should appear in three units: row, column and square.
-
-
-box_to_unit_peers = dict((b, [[p for p in u if b != p] for u in units if b in u]) for b in boxes)
-# dict(str, list(str))
-# unit_list per coordinate
-# A1 element example:
-# [['A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9'],
-# ['B1', 'C1', 'D1', 'E1', 'F1', 'G1', 'H1', 'I1'],
-# ['A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3']]
-
-
-box_to_all_peers = dict((b, set(sum(box_to_unit_peers[b], []))) for b in boxes)
-# dict(str, set)
-# other boxes that are peers across all units:
-# {'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9',
-# 'B1', 'C1', 'D1', 'E1', 'F1', 'G1', 'H1', 'I1'
-# 'B2', 'B3', 'C2', 'C3'}
+board = SudokuBoard()
 
 
 def grid_values(grid):
@@ -94,11 +96,13 @@ def grid_values(grid):
         - keys: Box labels, e.g. 'A1'
         - values: Value in corresponding box, e.g. '8', or '123456789' if it is empty.
     """
-    return {k: '123456789' if v == '.' else v for k, v in zip(boxes, grid)}
+    return {k: '123456789' if v == '.' else v for k, v in zip(board.boxes, grid)}
 
 
 def values_grid(values):
-    return False if values is False else ''.join([values[box] if len(values[box]) == 1 else '.' for box in boxes])
+    if values is False:
+        return values
+    return ''.join([values[box] if len(values[box]) == 1 else '.' for box in board.boxes])
 
 
 def display(values):
@@ -107,10 +111,10 @@ def display(values):
     Args:
         values(dict): The sudoku in dictionary form
     """
-    width = 1 + max(len(values[s]) for s in boxes)
+    width = 1 + max(len(values[s]) for s in board.boxes)
     line = '+'.join(['-' * (width * 3)] * 3)
-    for r in rows:
-        print(''.join(values[r + c].center(width) + ('|' if c in '36' else '') for c in cols))
+    for r in board.rows:
+        print(''.join(values[r + c].center(width) + ('|' if c in '36' else '') for c in board.cols))
         if r in 'CF':
             print(line)
     return
@@ -171,7 +175,7 @@ def solve_status(values):
 
 def is_valid(values):
     evalues = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
-    for i, unit in enumerate(units):
+    for i, unit in enumerate(board.units):
         unit_check = sorted([values[box] for box in unit])
         # print('{}: {}'.format(i, unit_check))
         if (unit_check == evalues) is False:
@@ -212,7 +216,7 @@ def naked_twins(values):
         choices = values[box]
         if len(choices) > 2:
             continue
-        for unit in box_to_unit_peers[box]:  # three unit types: row, column, box
+        for unit in board.unit_peers(box):  # three unit types: row, column, box
             for peer in unit:
                 if values[peer] != choices:
                     continue
@@ -237,7 +241,7 @@ def naked_twins(values):
 def eliminate(values):
     """ Eliminate the value of each solved box from all of it's peers values. """
     for solved_box in solved_boxes(values):
-        for peer in box_to_all_peers[solved_box]:
+        for peer in board.all_peers(solved_box):
             values = assign_value(values, peer, values[peer].replace(values[solved_box], ''))
     return values
 
@@ -253,7 +257,7 @@ def only_choice(values):
         choices = values[box]
         found = False
         # logger.debug('{}: {}'.format(box, choices))
-        for unit in box_to_unit_peers[box]:  # three unit types: row, column, box
+        for unit in board.unit_peers(box):  # three unit types: row, column, box
             other_choices = ''.join([values[peer] for peer in unit])
             for choice in choices:
                 if choice not in other_choices:
