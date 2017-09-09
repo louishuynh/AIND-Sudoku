@@ -62,8 +62,8 @@ class SudokuBoard():
         self.row_units = [self.cross(r, self.cols) for r in self.rows]
         self.column_units = [self.cross(self.rows, c) for c in self.cols]
         self.square_units = [self.cross(rs, cs) for rs in ('ABC', 'DEF', 'GHI') for cs in ('123', '456', '789')]
-        self._diag_1 = [row + col for row, col in zip('ABCDEFGHI', '123456789')]
-        self._diag_2 = [row + col for row, col in zip('ABCDEFGHI', '987654321')]
+        self._diag_1 = [row + col for row, col in zip(self.rows, self.cols)]
+        self._diag_2 = [row + col for row, col in zip(self.rows, self.cols[::-1])]
         self.diagonal_units = [self._diag_1, self._diag_2]
         self.units = self.row_units + self.column_units + self.square_units + self.diagonal_units
         self.unit_peers_map = dict((b, [[p for p in u if b != p] for u in self.units if b in u]) for b in self.boxes)
@@ -99,7 +99,8 @@ def grid_values(grid):
     return {k: '123456789' if v == '.' else v for k, v in zip(board.boxes, grid)}
 
 
-def values_grid(values):
+def values_grid(values: dict) -> str or bool:
+    """ Convert values [dict(str, str)], a dictionary representation of Sudoku to a string representation."""
     if values is False:
         return values
     return ''.join([values[box] if len(values[box]) == 1 else '.' for box in board.boxes])
@@ -148,6 +149,7 @@ def invalid_boxes(values):
 
 
 def solved_count(values):
+    """ Returns the number of solved boxes. """
     list_solved = solved_boxes(values)
     return len(list_solved)
 
@@ -168,12 +170,20 @@ def check_complete(values):
 
 
 def solve_status(values):
+    """ Returns a string containing the completion status of Sudoku for logging."""
     n_solved = solved_count(values)
     pct_solved = '{:.0f}'.format(100 * n_solved / 81)
     return '{}% solved ({}/81).'.format(pct_solved, n_solved)
 
 
 def is_valid(values):
+    """
+    Checks to see if Sudoku is valid.
+    Checks to see that each box contains the numbers 1 through to 9.
+    :param values: dict(keys, values).
+    :return: bool. True if valid. False if not.
+    """
+    """ Checks to see if a Sudoku"""
     evalues = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
     for i, unit in enumerate(board.units):
         unit_check = sorted([values[box] for box in unit])
@@ -233,8 +243,6 @@ def naked_twins(values):
                             new_v = values[non_twin_peer].replace(ntp_choice, '')
                             values = assign_value(values, non_twin_peer, new_v)
                             logger.debug(msg3.format(msg2, ntp_choice, non_twin_peer, old_v, new_v))
-
-
     return values
 
 
